@@ -16,10 +16,10 @@ User Query
     ↓
 LangGraph Orchestrator (Classification)
     ↓
-┌─────────┬──────────┬──────────┬───────────┐
-│ Billing │ Network  │  Plan    │ Knowledge │
-│ (CrewAI)│ (AutoGen)│(LangChain)│(LlamaIndex)│
-└─────────┴──────────┴──────────┴───────────┘
+┌─────────┬──────────┬────────────┬─────────────┐
+│ Billing │ Network  │  Plan      │ Knowledge   │
+│ (CrewAI)│ (AutoGen)│(LangChain) │(LlamaIndex) │
+└─────────┴──────────┴────────────┴─────────────┘
     ↓
 Final Response
 ```
