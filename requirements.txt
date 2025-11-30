@@ -1,0 +1,44 @@
+# --- Runtime Environment ---
+streamlit
+python-dotenv
+
+# --- Database ---
+sqlalchemy
+
+# --- LLM Providers ---
+openai
+tiktoken
+
+# --- LangChain stack ---
+langchain
+langchain-community
+langchain-core
+langchain-openai
+
+# --- LangGraph workflow ---
+langgraph
+
+# --- CrewAI (Billing agent) ---
+crewai
+crewai-tools
+
+# --- AutoGen (Network troubleshooting agent) ---
+pyautogen
+
+# --- LlamaIndex (Knowledge retrieval) ---
+llama-index
+llama-index-core
+llama-index-readers-file
+llama-index-llms-openai
+llama-index-embeddings-openai
+llama-index-vector-stores-chroma
+
+# --- Vector DB (Chroma) ---
+chromadb
+faiss-cpu    # Required for LlamaIndex similarity+chroma fallback
+
+# --- PDF/Text loaders ---
+pypdf
+
+# --- Optional utilities ---
+pandas
