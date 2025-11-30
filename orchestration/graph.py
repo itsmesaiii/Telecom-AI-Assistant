@@ -27,25 +27,54 @@ def classify_query(state: TelecomState):
     return state
 
 def run_billing_agent(state: TelecomState):
+    from utils.database import db
+    
     query = state.get("query")
-    # In a real app, we'd get customer_id from state or context
-    response = process_billing_query(query, customer_id="CUST001")
+    
+    # Get customer email from state
+    customer_info = state.get("customer_info", {})
+    customer_email = customer_info.get("email", "")
+    
+    # Look up customer_id from email
+    customer_id = "CUST001"  # Default fallback
+    if customer_email:
+        email_query = "SELECT customer_id FROM customers WHERE email = ?"
+        result = db.query_one(email_query, [customer_email])
+        if result:
+            customer_id = result[0]
+    
+    response = process_billing_query(query, customer_id=customer_id)
     state["intermediate_responses"] = {"result": response}
     return state
 
 def run_network_agent(state: TelecomState):
     query = state.get("query")
-    # Get customer email from state, fallback to CUST001's email
+    # Get customer email from state
     customer_info = state.get("customer_info", {})
-    customer_email = customer_info.get("email", "john.doe@example.com")  # CUST001's email
+    customer_email = customer_info.get("email", "")  # No hardcoded fallback
     
     response = process_network_query(query, customer_email)
     state["intermediate_responses"] = {"result": response}
     return state
 
 def run_plan_agent(state: TelecomState):
+    from utils.database import db
+    
     query = state.get("query")
-    response = process_plan_query(query, customer_id="CUST001")
+    
+    # Get customer email from state
+    customer_info = state.get("customer_info", {})
+    customer_email = customer_info.get("email", "")
+    
+    # Look up customer_id from email
+    customer_id = "CUST001"  # Default fallback
+    if customer_email:
+        email_query = "SELECT customer_id FROM customers WHERE email = ?"
+        result = db.query_one(email_query, [customer_email])
+        if result:
+            customer_id = result[0]
+    
+    response = process_plan_query(query, customer_id=customer_id)
     state["intermediate_responses"] = {"result": response}
     return state
 

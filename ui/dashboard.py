@@ -17,11 +17,14 @@ def render_dashboard():
             try:
                 # Fetch data using service layer
                 customer_id, customer_data = get_customer_profile(st.session_state.user_email)
-                usage_data = get_usage_history(customer_id)
                 
-                st.session_state.account_data = {"customer": customer_data, "usage": usage_data}
-                st.success("Account details loaded!")
-                st.rerun()
+                if customer_id is None or customer_data is None:
+                    st.error(f"Email '{st.session_state.user_email}' is not registered in our system. Please contact customer service.")
+                else:
+                    usage_data = get_usage_history(customer_id)
+                    st.session_state.account_data = {"customer": customer_data, "usage": usage_data}
+                    st.success("Account details loaded!")
+                    st.rerun()
             except Exception as e:
                 st.error(f"Error: {str(e)}")
     

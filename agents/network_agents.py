@@ -81,23 +81,11 @@ CUSTOMER INFORMATION (CHECK THIS FIRST!):
 - Current Plan: {customer_data[4]}
 """
         else:
-            # Fallback to demo customer CUST001
-            customer_context = f"Email '{customer_email}' not found. Using demo account.\n"
-            customer_query_fallback = """
-            SELECT c.customer_id, c.name, c.account_status, c.service_plan_id,
-                   p.name as plan_name
-            FROM customers c
-            LEFT JOIN service_plans p ON c.service_plan_id = p.plan_id
-            WHERE c.customer_id = 'CUST001'
-            """
-            customer_data = db.query_one(customer_query_fallback, [])
-            if customer_data:
-                customer_context += f"""
-CUSTOMER INFORMATION (Demo Account):
-- Customer Name: {customer_data[1]}
-- Account Status: {customer_data[2]} ← **CRITICAL: Check this first!**
-- Current Plan: {customer_data[4]}
-"""
+            # Email not found in database
+            if customer_email:
+                return f"I'm sorry, but the email '{customer_email}' is not registered in our system. Please contact customer service to verify your account details."
+            else:
+                return "I'm sorry, but I couldn't identify your account. Please make sure you're logged in with a valid email address."
     except Exception as e:
         customer_context = f"Error fetching customer data: {str(e)}\nProceeding with generic troubleshooting."
     

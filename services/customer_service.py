@@ -8,12 +8,16 @@ from utils.database import db
 def get_customer_profile(email):
     """
     Fetch customer profile and plan details by email.
-    Falls back to demo account (CUST001) if email not found.
+    Returns None if email not found in database.
     """
     # 1. Get Customer ID
     email_query = "SELECT customer_id FROM customers WHERE email = ?"
     result = db.query_one(email_query, [email])
-    customer_id = result[0] if result else "CUST001"
+    
+    if not result:
+        return None, None
+    
+    customer_id = result[0]
     
     # 2. Fetch Profile + Plan
     customer_query = """
