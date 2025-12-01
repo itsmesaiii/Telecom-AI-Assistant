@@ -3,7 +3,6 @@ LangGraph Orchestrator - Routes queries to specialized agents.
 Classifies intent and coordinates multi-agent responses.
 """
 
-
 from langgraph.graph import StateGraph
 from .state import TelecomState
 
@@ -12,18 +11,59 @@ from agents.network_agents import process_network_query
 from agents.service_agents import process_plan_query
 from agents.knowledge_agents import process_knowledge_query
 
+from openai import OpenAI
+from dotenv import load_dotenv
+import os
+from .state import TelecomState 
+
+load_dotenv()
+
+try:
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    VALID_CATEGORIES = ["billing", "network", "plan", "knowledge"]
+except Exception:
+    client = None
+
 def classify_query(state: TelecomState):
-    q = state.get("query", "").lower()
-
-    if any(w in q for w in ["bill", "charge", "payment"]):
-        state["classification"] = "billing"
-    elif any(w in q for w in ["network", "signal", "data", "call", "internet", "slow"]):
-        state["classification"] = "network"
-    elif any(w in q for w in ["plan", "recommend", "upgrade", "downgrade"]):
-        state["classification"] = "plan"
-    else:
+    """Uses LLM to classify query for LangGraph routing."""
+    if not client:
         state["classification"] = "knowledge"
+        return state
 
+    q = state.get("query", "")
+    prompt = f"""
+    Classify the user query into exactly one of these categories:
+    {', '.join(VALID_CATEGORIES)}
+
+    Query: "{q}"
+
+    Respond with ONLY the category name, nothing else. Response must be lowercase.
+    """
+
+    # 1. API Call
+    try:
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a classifier and must only output one word from the list."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=10,
+            temperature=0
+        )
+        category = resp.choices[0].message.content.strip().lower()
+
+    except Exception:
+        # Fallback on API failure
+        category = "knowledge"
+        
+    # 2. Validation and State Update
+    if category in VALID_CATEGORIES:
+        state["classification"] = category
+    else:
+        # Fallback on invalid LLM output
+        state["classification"] = "knowledge"
+    
     return state
 
 def run_billing_agent(state: TelecomState):
