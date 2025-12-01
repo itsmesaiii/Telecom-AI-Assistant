@@ -13,3 +13,5 @@ class TelecomState(TypedDict, total=False):
     final_response: str
     customer_info: Dict[str, Any]
     chat_history: List[Dict[str, str]]
+    multi_intent: bool
+    all_intents: List[str]

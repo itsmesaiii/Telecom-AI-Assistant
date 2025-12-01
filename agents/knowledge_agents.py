@@ -64,6 +64,17 @@ def _initialize_knowledge_base():
 def process_knowledge_query(query):
     """Run the knowledge retrieval query using LlamaIndex."""
     try:
+        # Check for out-of-scope queries (jokes, greetings, etc.)
+        query_lower = query.lower()
+        out_of_scope_keywords = [
+            "joke", "funny", "laugh", "humor", "tell me a", 
+            "hello", "hi ", "hey ", "good morning", "good evening",
+            "how are you", "what's up", "sup"
+        ]
+        
+        if any(keyword in query_lower for keyword in out_of_scope_keywords):
+            return "I'm here to help with telecom-related questions about billing, network issues, service plans, and technical features like VoLTE, 5G, APN settings, etc. How can I assist you with your telecom service today?"
+        
         query_engine = _initialize_knowledge_base()
         response = query_engine.query(query)
         return str(response)

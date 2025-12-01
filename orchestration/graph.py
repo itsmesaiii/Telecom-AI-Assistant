@@ -25,19 +25,33 @@ except Exception:
     client = None
 
 def classify_query(state: TelecomState):
-    """Uses LLM to classify query for LangGraph routing."""
+    """Uses LLM to classify query for LangGraph routing with multi-intent detection."""
     if not client:
         state["classification"] = "knowledge"
         return state
 
     q = state.get("query", "")
+    
+    # Enhanced prompt for multi-intent detection
     prompt = f"""
-    Classify the user query into exactly one of these categories:
-    {', '.join(VALID_CATEGORIES)}
-
+    Analyze the user query and classify it into categories.
+    
+    Available categories: {', '.join(VALID_CATEGORIES)}
+    
     Query: "{q}"
-
-    Respond with ONLY the category name, nothing else. Response must be lowercase.
+    
+    Instructions:
+    1. If the query has MULTIPLE intents (e.g., asking about both billing AND network), 
+       respond with: "multi-intent: <category1>, <category2>"
+    2. If the query has ONE clear intent, respond with just the category name
+    3. All responses must be lowercase
+    
+    Examples:
+    - "What's my bill?" -> billing
+    - "My internet is slow" -> network
+    - "I need help with my bill and my network is down" -> multi-intent: billing, network
+    
+    Respond with ONLY the classification, nothing else.
     """
 
     # 1. API Call
@@ -45,24 +59,49 @@ def classify_query(state: TelecomState):
         resp = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a classifier and must only output one word from the list."},
+                {"role": "system", "content": "You are a precise classifier. Follow instructions exactly."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=10,
+            max_tokens=30,
             temperature=0
         )
-        category = resp.choices[0].message.content.strip().lower()
+        result = resp.choices[0].message.content.strip().lower()
 
     except Exception:
         # Fallback on API failure
-        category = "knowledge"
-        
-    # 2. Validation and State Update
-    if category in VALID_CATEGORIES:
-        state["classification"] = category
-    else:
-        # Fallback on invalid LLM output
         state["classification"] = "knowledge"
+        return state
+    
+    # 2. Handle multi-intent queries
+    if result.startswith("multi-intent"):
+        # Extract categories
+        categories_str = result.replace("multi-intent:", "").strip()
+        categories = [cat.strip() for cat in categories_str.split(",")]
+        
+        # For now, use the first valid category and store multi-intent flag
+        primary_category = None
+        for cat in categories:
+            if cat in VALID_CATEGORIES:
+                primary_category = cat
+                break
+        
+        if primary_category:
+            state["classification"] = primary_category
+            state["multi_intent"] = True
+            state["all_intents"] = [cat for cat in categories if cat in VALID_CATEGORIES]
+        else:
+            # Fallback if no valid category found
+            state["classification"] = "knowledge"
+            state["multi_intent"] = False
+    else:
+        # Single intent - validate and set
+        if result in VALID_CATEGORIES:
+            state["classification"] = result
+            state["multi_intent"] = False
+        else:
+            # Fallback on invalid LLM output
+            state["classification"] = "knowledge"
+            state["multi_intent"] = False
     
     return state
 
@@ -133,7 +172,19 @@ def make_placeholder(name):
     return node
 
 def finalize(state: TelecomState):
-    state["final_response"] = list(state["intermediate_responses"].values())[0]
+    # Add multi-intent notification if detected
+    response = list(state["intermediate_responses"].values())[0]
+    
+    if state.get("multi_intent", False):
+        all_intents = state.get("all_intents", [])
+        if len(all_intents) > 1:
+            other_intents = [intent for intent in all_intents if intent != state.get("classification")]
+            if other_intents:
+                intent_names = {"billing": "billing", "network": "network issues", "plan": "plan recommendations", "knowledge": "general questions"}
+                other_topics = ", ".join([intent_names.get(i, i) for i in other_intents])
+                response += f"\n\n💡 *I noticed you also asked about {other_topics}. Feel free to ask about that separately!*"
+    
+    state["final_response"] = response
     return state
 
 def create_graph():
