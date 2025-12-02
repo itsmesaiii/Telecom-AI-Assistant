@@ -33,7 +33,7 @@ def render_dashboard():
             with st.container(border=True):
                 col_bill1, col_bill2, col_bill3 = st.columns([2, 2, 1])
                 with col_bill1:
-                    st.markdown(f"### 💳 Current Bill: **${bill_amount:.2f}**")
+                    st.markdown(f"### 💳 Current Bill: **₹{bill_amount:.2f}**")
                 with col_bill2:
                     if days_until_bill > 0:
                         st.markdown(f"📅 Next bill in **{days_until_bill} days**")
@@ -89,8 +89,8 @@ def render_dashboard():
                     st.metric("Data Left", "Unlimited", delta="∞")
             
             with stat_col3:
-                st.metric("Current Bill", f"${latest[6]:.2f}",
-                         delta=f"${latest[5]:.2f} extra" if latest[5] > 0 else "No extras",
+                st.metric("Current Bill", f"₹{latest[6]:.2f}",
+                         delta=f"₹{latest[5]:.2f} extra" if latest[5] > 0 else "No extras",
                          delta_color="inverse" if latest[5] > 0 else "off")
             
             with stat_col4:
@@ -146,7 +146,7 @@ def render_dashboard():
                 with st.container(border=True):
                     st.markdown("#### Current Plan")
                     st.write(f"**Plan:** {cd[8]}")
-                    st.write(f"**Cost:** \\${cd[9]}/month")
+                    st.write(f"**Cost:** ₹{cd[9]}/month")
                     st.write(f"**Data:** {'Unlimited' if cd[13] else f'{cd[10]} GB'}")
                     st.write(f"**Voice:** {'Unlimited' if cd[14] else f'{cd[11]} min'}")
                     st.write(f"**SMS:** {'Unlimited' if cd[15] else f'{cd[12]}'}")
@@ -264,9 +264,9 @@ def render_dashboard():
                     # Latest Bill Summary
                     st.markdown("#### 💰 Latest Bill")
                     if latest[5] > 0:
-                        st.markdown(f"**${latest[6]:.2f}** (Base: ${cd[9]:.2f} + Extra: ${latest[5]:.2f})")
+                        st.markdown(f"**₹{latest[6]:.2f}** (Base: ₹{cd[9]:.2f} + Extra: ₹{latest[5]:.2f})")
                     else:
-                        st.markdown(f"**${latest[6]:.2f}** (No additional charges)")
+                        st.markdown(f"**₹{latest[6]:.2f}** (No additional charges)")
                 
                 st.write("")
                 
@@ -277,8 +277,8 @@ def render_dashboard():
                         "Period Start", "Period End", "Data (GB)", 
                         "Voice (min)", "SMS", "Extra Charges", "Total Bill"
                     ])
-                    df["Extra Charges"] = df["Extra Charges"].apply(lambda x: f"\\${x:.2f}")
-                    df["Total Bill"] = df["Total Bill"].apply(lambda x: f"\\${x:.2f}")
+                    df["Extra Charges"] = df["Extra Charges"].apply(lambda x: f"₹{x:.2f}")
+                    df["Total Bill"] = df["Total Bill"].apply(lambda x: f"₹{x:.2f}")
                     st.dataframe(df, use_container_width=True, hide_index=True)
     else:
         st.info("Click the button above to load your account details")

@@ -64,19 +64,37 @@ def _initialize_knowledge_base():
 def process_knowledge_query(query):
     """Run the knowledge retrieval query using LlamaIndex."""
     try:
-        # Check for out-of-scope queries (jokes, greetings, etc.)
-        query_lower = query.lower()
-        out_of_scope_keywords = [
-            "joke", "funny", "laugh", "humor", "tell me a", 
-            "hello", "hi ", "hey ", "good morning", "good evening",
-            "how are you", "what's up", "sup"
-        ]
+        # STRICT Semantic Guardrail
+        # Use LLM to check if query is telecom-related
+        check_prompt = f"""
+        Analyze if this query is related to a Telecom Company's services (Billing, Network, Plans, Technical Support, 5G, etc.).
         
-        if any(keyword in query_lower for keyword in out_of_scope_keywords):
-            return "I'm here to help with telecom-related questions about billing, network issues, service plans, and technical features like VoLTE, 5G, APN settings, etc. How can I assist you with your telecom service today?"
+        Query: "{query}"
         
+        Respond with ONLY "YES" or "NO".
+        - YES: If it is about telecom services, bills, network, phones, app, or account.
+        - NO: If it is about food, cooking, weather, general knowledge, coding, jokes, or anything else.
+        """
+        
+        # Ensure LLM is initialized
+        _initialize_knowledge_base()
+        
+        # Run check
+        relevance = Settings.llm.complete(check_prompt).text.strip().upper()
+        
+        if "NO" in relevance:
+             return "I apologize, but I can only assist with Telecom-related queries (Billing, Network, Plans, Technical Support). I cannot help with other topics."
+        
+        # Initialize and query knowledge base
         query_engine = _initialize_knowledge_base()
         response = query_engine.query(query)
-        return str(response)
+        
+        # Post-process response to ensure Rupee currency
+        response_text = str(response)
+        # Replace common dollar patterns with Rupees
+        import re
+        response_text = re.sub(r'\$(\d+)', r'₹\1', response_text)
+        
+        return response_text
     except Exception as e:
         return f"Error processing knowledge query: {str(e)}"

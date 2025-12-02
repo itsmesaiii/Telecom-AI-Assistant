@@ -40,6 +40,12 @@ def classify_query(state: TelecomState):
     
     Query: "{q}"
     
+    Category Definitions:
+    - billing: Questions about bills, charges, payments, invoices, costs
+    - network: Connectivity PROBLEMS (can't connect, slow speed, no signal, not working)
+    - plan: Service plan recommendations, upgrades, downgrades, plan comparisons
+    - knowledge: General INFORMATION about features, coverage areas, technical specs, how things work
+    
     Instructions:
     1. If the query has MULTIPLE intents (e.g., asking about both billing AND network), 
        respond with: "multi-intent: <category1>, <category2>"
@@ -49,6 +55,13 @@ def classify_query(state: TelecomState):
     Examples:
     - "What's my bill?" -> billing
     - "My internet is slow" -> network
+    - "My 5G is not working" -> network
+    - "Can't connect to 5G" -> network
+    - "What areas have 5G coverage?" -> knowledge
+    - "Tell me about 5G" -> knowledge
+    - "What is VoLTE?" -> knowledge
+    - "Explain APN settings" -> knowledge
+    - "Which plan should I choose?" -> plan
     - "I need help with my bill and my network is down" -> multi-intent: billing, network
     
     Respond with ONLY the classification, nothing else.
